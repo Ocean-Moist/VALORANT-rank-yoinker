@@ -3,6 +3,7 @@ import requests
 
 class Experimental:
     def __init__(self, Requests, log):
+        self.Requests = Requests
         self.log = log
 
     def get_views(self, name: str):

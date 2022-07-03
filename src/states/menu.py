@@ -1,8 +1,3 @@
-
-
-
-
-
 class Menu:
     def __init__(self, Requests, log, presences):
         self.Requests = Requests
@@ -24,6 +19,7 @@ class Menu:
         return party_json
 
     def get_party_members(self, self_puuid, presencesDICT):
+        global party_id
         res = []
         for presence in presencesDICT:
             if presence["puuid"] == self_puuid:

@@ -2,6 +2,7 @@ import glob
 import os
 import time
 
+
 class Logging:
     def __init__(self):
         self.logFileOpened = False

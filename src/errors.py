@@ -1,11 +1,11 @@
-import socket
 import os.path
+import socket
+
 
 class Error:
-    
+
     def __init__(self, log):
         self.log = log
-
 
     def PortError(self, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,7 +23,7 @@ class Error:
         sock.close()
 
     def LockfileError(self, path):
-        
+
         if os.path.exists(path):
             return True
         else:

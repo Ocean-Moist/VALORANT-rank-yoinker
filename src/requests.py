@@ -1,11 +1,10 @@
 import base64
-from distutils import errors
 import json
+import os
 import time
 
 import requests
 from colr import color
-import os
 
 
 class Requests:
@@ -23,7 +22,7 @@ class Requests:
         self.lockfile = self.get_lockfile()
 
         self.puuid = ''
-        #fetch puuid so its avaible outsite
+        # fetch puuid so its avaible outsite
         self.get_headers()
 
     def check_version(self):
@@ -36,21 +35,22 @@ class Requests:
         if float(release_version) > float(self.version):
             print(f"New version available! {link}")
 
-
-    def check_status(self):
+    @staticmethod
+    def check_status():
         # checking status
         rStatus = requests.get(
             "https://raw.githubusercontent.com/isaacKenyon/VALORANT-rank-yoinker/main/status.json").json()
         if not rStatus["status_good"] or rStatus["print_message"]:
             status_color = (255, 0, 0) if not rStatus["status_good"] else (0, 255, 0)
             print(color(rStatus["message_to_display"], fore=status_color))
-            
+
     def fetch(self, url_type: str, endpoint: str, method: str):
+        global response
         try:
             if url_type == "glz":
                 response = requests.request(method, self.glz_url + endpoint, headers=self.get_headers(), verify=False)
                 self.log(f"fetch: url: '{url_type}', endpoint: {endpoint}, method: {method},"
-                    f" response code: {response.status_code}")
+                         f" response code: {response.status_code}")
                 if not response.ok:
                     time.sleep(5)
                     self.headers = {}
@@ -85,7 +85,8 @@ class Requests:
                 if not response.ok: self.headers = {}
                 return response.json()
         except json.decoder.JSONDecodeError:
-            self.log(f"JSONDecodeError in fetch function, resp.code: {response.status_code}, resp_text: '{response.text}")
+            self.log(
+                f"JSONDecodeError in fetch function, resp.code: {response.status_code}, resp_text: '{response.text}")
             print(response)
             print(response.text)
 
@@ -118,7 +119,7 @@ class Requests:
 
     def get_lockfile(self):
         path = os.path.join(os.getenv('LOCALAPPDATA'), R'Riot Games\Riot Client\Config\lockfile')
-        
+
         if self.Error.LockfileError(path):
             with open(path) as lockfile:
                 self.log("opened lockfile")
@@ -126,8 +127,8 @@ class Requests:
                 keys = ['name', 'PID', 'port', 'password', 'protocol']
                 return dict(zip(keys, data))
 
-
     def get_headers(self):
+        global headers
         if self.headers == {}:
             local_headers = {'Authorization': 'Basic ' + base64.b64encode(
                 ('riot:' + self.lockfile['password']).encode()).decode()}
@@ -145,5 +146,3 @@ class Requests:
                 "User-Agent": "ShooterGame/13 Windows/10.0.19043.1.256.64bit"
             }
         return headers
-
-

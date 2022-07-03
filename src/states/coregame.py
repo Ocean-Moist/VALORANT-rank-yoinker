@@ -1,7 +1,3 @@
-
-
-
-
 class Coregame:
     def __init__(self, Requests, log):
         self.log = log
@@ -12,7 +8,8 @@ class Coregame:
 
     def get_coregame_match_id(self):
         try:
-            self.response = self.Requests.fetch(url_type="glz", endpoint=f"/core-game/v1/players/{self.Requests.puuid}", method="get")
+            self.response = self.Requests.fetch(url_type="glz", endpoint=f"/core-game/v1/players/{self.Requests.puuid}",
+                                                method="get")
             match_id = self.response['MatchID']
             self.log(f"retrieved coregame match id: '{match_id}'")
             return match_id
@@ -22,4 +19,5 @@ class Coregame:
             return 0
 
     def get_coregame_stats(self):
-        return self.Requests.fetch(url_type="glz", endpoint=f"/core-game/v1/matches/{self.get_coregame_match_id()}", method="get")
+        return self.Requests.fetch(url_type="glz", endpoint=f"/core-game/v1/matches/{self.get_coregame_match_id()}",
+                                   method="get")

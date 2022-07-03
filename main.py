@@ -1,30 +1,28 @@
-import traceback
-import requests
-import urllib3
 import os
 import sys
 import time
-from prettytable import PrettyTable
-from alive_progress import alive_bar
+import traceback
 
-from src.constants import *
-from src.requests import Requests
-from src.logs import Logging
-from src.config import Config
+import urllib3
+from alive_progress import alive_bar
+from prettytable import PrettyTable
+
+from src.Loadouts import Loadouts
 from src.colors import Colors
-from src.rank import Rank
+from src.config import Config
+from src.constants import *
 from src.content import Content
+from src.errors import Error
+from src.logs import Logging
 from src.names import Names
 from src.presences import Presences
-from src.Loadouts import Loadouts
-
+from src.rank import Rank
+from src.requests import Requests
+from src.server import Server
+from src.states.coregame import Coregame
 from src.states.menu import Menu
 from src.states.pregame import Pregame
-from src.states.coregame import Coregame
-
 from src.table import Table
-from src.server import Server
-from src.errors import Error
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -44,7 +42,7 @@ try:
     log = Logging.log
 
     ErrorSRC = Error(log)
-    
+
     Requests = Requests(version, log, ErrorSRC)
     Requests.check_version()
     Requests.check_status()
@@ -59,14 +57,12 @@ try:
 
     presences = Presences(Requests, log)
 
-
     menu = Menu(Requests, log, presences)
     pregame = Pregame(Requests, log)
     coregame = Coregame(Requests, log)
 
     Server = Server(log, ErrorSRC)
     Server.start_server()
-
 
     agent_dict = content.get_all_agents()
 
@@ -75,19 +71,15 @@ try:
     loadoutsClass = Loadouts(Requests, log, colors, Server)
     tableClass = Table()
 
-
-
     log(f"VALORANT rank yoinker v{version}")
-
-
-
 
     valoApiSkins = requests.get("https://valorant-api.com/v1/weapons/skins")
     gameContent = content.get_content()
     seasonID = content.get_latest_season_id(gameContent)
     lastGameState = ""
 
-    print(color("\nVisit https://vry.netlify.app/matchLoadouts to view full player inventories\n", fore=(255, 253, 205)))
+    print(
+        color("\nVisit https://vry.netlify.app/matchLoadouts to view full player inventories\n", fore=(255, 253, 205)))
     while True:
         table = PrettyTable()
         try:
@@ -112,7 +104,8 @@ try:
                     server = "New server"
                 presences.wait_for_presence(namesClass.get_players_puuid(Players))
                 names = namesClass.get_names_from_puuids(Players)
-                loadouts = loadoutsClass.get_match_loadouts(coregame.get_coregame_match_id(), Players, cfg.weapon, valoApiSkins, names, state="game")
+                loadouts = loadoutsClass.get_match_loadouts(coregame.get_coregame_match_id(), Players, cfg.weapon,
+                                                            valoApiSkins, names, state="game")
                 with alive_bar(total=len(Players), title='Fetching Players', bar='classic2') as bar:
                     presence = presences.get_presence()
                     partyOBJ = menu.get_party_json(namesClass.get_players_puuid(Players), presence)
@@ -148,26 +141,18 @@ try:
                             rankStatus = playerRank[1]
                         playerRank = playerRank[0]
                         player_level = player["PlayerIdentity"].get("AccountLevel")
-                        if player["PlayerIdentity"]["Incognito"]:
-                            Namecolor = colors.get_color_from_team(player["TeamID"],
-                                                            names[player["Subject"]],
-                                                            player["Subject"], Requests.puuid, agent=player["CharacterID"], party_members=partyMembersList)
-                        else:
-                            Namecolor = colors.get_color_from_team(player["TeamID"],
-                                                            names[player["Subject"]],
-                                                            player["Subject"], Requests.puuid, party_members=partyMembersList)
+
+                        Namecolor = colors.get_color_from_team(player["TeamID"],
+                                                               names[player["Subject"]],
+                                                               player["Subject"], Requests.puuid,
+                                                               )
                         if lastTeam != player["TeamID"]:
                             if lastTeamBoolean:
                                 tableClass.add_row_table(table, ["", "", "", "", "", "", "", "", ""])
                         lastTeam = player['TeamID']
                         lastTeamBoolean = True
-                        if player["PlayerIdentity"]["HideAccountLevel"]:
-                            if player["Subject"] == Requests.puuid or player["Subject"] in partyMembersList:
-                                PLcolor = colors.level_to_color(player_level)
-                            else:
-                                PLcolor = ""
-                        else:
-                            PLcolor = colors.level_to_color(player_level)
+
+                        PLcolor = colors.level_to_color(player_level)
                         # AGENT
                         # agent = str(agent_dict.get(player["CharacterID"].lower()))
                         agent = colors.get_agent_from_uuid(player["CharacterID"].lower())
@@ -187,7 +172,6 @@ try:
                         # RANK RATING
                         rr = playerRank[1]
 
-
                         # PEAK RANK
                         peakRank = NUMBERTORANKS[playerRank[3]]
 
@@ -197,16 +181,16 @@ try:
                         # LEVEL
                         level = PLcolor
                         tableClass.add_row_table(table, [party_icon,
-                                              agent,
-                                              name,
-                                              # views,
-                                              skin,
-                                              rankName,
-                                              rr,
-                                              peakRank,
-                                              leaderboard,
-                                              level
-                                              ])
+                                                         agent,
+                                                         name,
+                                                         # views,
+                                                         skin,
+                                                         rankName,
+                                                         rr,
+                                                         peakRank,
+                                                         leaderboard,
+                                                         level
+                                                         ])
                         bar()
             elif game_state == "PREGAME":
                 pregame_stats = pregame.get_pregame_stats()
@@ -217,9 +201,9 @@ try:
                 Players = pregame_stats["AllyTeam"]["Players"]
                 presences.wait_for_presence(namesClass.get_players_puuid(Players))
                 names = namesClass.get_names_from_puuids(Players)
-                #temporary until other regions gets fixed?
+                # temporary until other regions gets fixed?
                 # loadouts = loadoutsClass.get_match_loadouts(pregame.get_pregame_match_id(), pregame_stats, cfg.weapon, valoApiSkins, names,
-                                            #   state="pregame")
+                #   state="pregame")
                 with alive_bar(total=len(Players), title='Fetching Players', bar='classic2') as bar:
                     presence = presences.get_presence()
                     partyOBJ = menu.get_party_json(namesClass.get_players_puuid(Players), presence)
@@ -252,22 +236,13 @@ try:
                             rankStatus = playerRank[1]
                         playerRank = playerRank[0]
                         player_level = player["PlayerIdentity"].get("AccountLevel")
-                        if player["PlayerIdentity"]["Incognito"]:
-                            NameColor = colors.get_color_from_team(pregame_stats['Teams'][0]['TeamID'],
-                                                            names[player["Subject"]],
-                                                            player["Subject"], Requests.puuid, agent=player["CharacterID"], party_members=partyMembersList)
-                        else:
-                            NameColor = colors.get_color_from_team(pregame_stats['Teams'][0]['TeamID'],
-                                                            names[player["Subject"]],
-                                                            player["Subject"], Requests.puuid, party_members=partyMembersList)
 
-                        if player["PlayerIdentity"]["HideAccountLevel"]:
-                            if player["Subject"] == Requests.puuid or player["Subject"] in partyMembersList:
-                                PLcolor = colors.level_to_color(player_level)
-                            else:
-                                PLcolor = ""
-                        else:
-                            PLcolor = colors.level_to_color(player_level)
+                        NameColor = colors.get_color_from_team(pregame_stats['Teams'][0]['TeamID'],
+                                                               names[player["Subject"]],
+                                                               player["Subject"], Requests.puuid,
+                                                               )
+
+                        PLcolor = colors.level_to_color(player_level)
                         if player["CharacterSelectionState"] == "locked":
                             agent_color = color(str(agent_dict.get(player["CharacterID"].lower())),
                                                 fore=(255, 255, 255))
@@ -286,7 +261,7 @@ try:
                         # VIEWS
                         # views = get_views(names[player["Subject"]])
 
-                        #temporary until other regions gets fixed?
+                        # temporary until other regions gets fixed?
                         # skin
                         # skin = loadouts[player["Subject"]]
 
@@ -306,16 +281,16 @@ try:
                         level = PLcolor
 
                         tableClass.add_row_table(table, [party_icon,
-                                              agent,
-                                              name,
-                                              # views,
-                                              "",
-                                              rankName,
-                                              rr,
-                                              peakRank,
-                                              leaderboard,
-                                              level,
-                                              ])
+                                                         agent,
+                                                         name,
+                                                         # views,
+                                                         "",
+                                                         rankName,
+                                                         rr,
+                                                         peakRank,
+                                                         leaderboard,
+                                                         level,
+                                                         ])
                         bar()
             if game_state == "MENUS":
                 Players = menu.get_party_members(Requests.puuid, presence)
@@ -358,15 +333,15 @@ try:
                         level = PLcolor
 
                         tableClass.add_row_table(table, [party_icon,
-                                              agent,
-                                              name,
-                                              "",
-                                              rankName,
-                                              rr,
-                                              peakRank,
-                                              leaderboard,
-                                              level
-                                              ])
+                                                         agent,
+                                                         name,
+                                                         "",
+                                                         rankName,
+                                                         rr,
+                                                         peakRank,
+                                                         leaderboard,
+                                                         level
+                                                         ])
                         # table.add_rows([])
                         bar()
             if (title := game_state_dict.get(game_state)) is None:
@@ -391,4 +366,4 @@ except:
         "The program has encountered an error. If the problem persists, please reach support"
         f" with the logs found in {os.getcwd()}\logs", fore=(255, 0, 0)))
     input("press enter to exit...\n")
-    os._exit(1)
+    sys.exit(1)

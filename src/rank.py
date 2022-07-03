@@ -1,11 +1,10 @@
-
 class Rank:
     def __init__(self, Requests, log, ranks_before):
         self.Requests = Requests
         self.log = log
         self.ranks_before = ranks_before
 
-    #in future rewrite this code
+    # in future rewrite this code
     def get_rank(self, puuid, seasonID):
         response = self.Requests.fetch('pd', f"/mmr/v1/players/{puuid}", "get")
         try:

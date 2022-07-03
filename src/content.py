@@ -1,13 +1,15 @@
 import requests
 
 
-class Content():
+class Content:
     def __init__(self, Requests, log):
         self.Requests = Requests
         self.log = log
 
     def get_content(self):
-        content = self.Requests.fetch("custom", f"https://shared.{self.Requests.region}.a.pvp.net/content-service/v3/content", "get")
+        content = self.Requests.fetch("custom",
+                                      f"https://shared.{self.Requests.region}.a.pvp.net/content-service/v3/content",
+                                      "get")
         return content
 
     def get_latest_season_id(self, content):

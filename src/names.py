@@ -8,12 +8,13 @@ class Names:
         self.log = log
 
     def get_name_from_puuid(self, puuid):
-        response = requests.put(self.Requests.pd_url + "/name-service/v2/players", headers=self.Requests.get_headers(), json=[puuid], verify=False)
+        response = requests.put(self.Requests.pd_url + "/name-service/v2/players", headers=self.Requests.get_headers(),
+                                json=[puuid], verify=False)
         return response.json()[0]["GameName"] + "#" + response.json()[0]["TagLine"]
 
-
     def get_multiple_names_from_puuid(self, puuids):
-        response = requests.put(self.Requests.pd_url + "/name-service/v2/players", headers=self.Requests.get_headers(), json=puuids, verify=False)
+        response = requests.put(self.Requests.pd_url + "/name-service/v2/players", headers=self.Requests.get_headers(),
+                                json=puuids, verify=False)
         name_dict = {player["Subject"]: f"{player['GameName']}#{player['TagLine']}"
                      for player in response.json()}
         return name_dict
@@ -24,5 +25,6 @@ class Names:
             players_puuid.append(player["Subject"])
         return self.get_multiple_names_from_puuid(players_puuid)
 
-    def get_players_puuid(self, Players):
+    @staticmethod
+    def get_players_puuid(Players):
         return [player["Subject"] for player in Players]

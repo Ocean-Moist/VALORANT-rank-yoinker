@@ -1,9 +1,12 @@
+import json
 import time
-from typing import final
+
 import requests
 from colr import color
+
 from src.constants import sockets
-import json
+
+
 # import pyperclip
 
 class Loadouts:
@@ -15,6 +18,7 @@ class Loadouts:
         self.Server = Server
 
     def get_match_loadouts(self, match_id, players, weaponChoose, valoApiSkins, names, state="game"):
+        global team_id, PlayerInventorys
         playersBackup = players
         weaponLists = {}
         valApiWeapons = requests.get("https://valorant-api.com/v1/weapons").json()
@@ -50,9 +54,10 @@ class Loadouts:
         self.Server.send_message(json.dumps(final_json))
         return weaponLists
 
-    #this will convert valorant loadouts to json with player names
-    def convertLoadoutToJsonArray(self, PlayerInventorys, players, state, names):
-        #get agent dict from main in future
+    # this will convert valorant loadouts to json with player names
+    @staticmethod
+    def convertLoadoutToJsonArray(PlayerInventorys, players, state, names):
+        # get agent dict from main in future
         # pyperclip.copy(json.dumps(PlayerInventorys))
         # names = self.namesClass.get_names_from_puuids(players)
         valoApiSprays = requests.get("https://valorant-api.com/v1/sprays")
@@ -74,18 +79,17 @@ class Loadouts:
                         players[i]["Subject"]: {}
                     }
                 )
-                #creates name field
+                # creates name field
                 final_json[players[i]["Subject"]].update({"Name": names[players[i]["Subject"]]})
-                #create spray field
+                # create spray field
                 final_json[players[i]["Subject"]].update({"Sprays": {}})
-                #append sprays to field
+                # append sprays to field
 
                 final_json[players[i]["Subject"]].update({"Level": players[i]["PlayerIdentity"]["AccountLevel"]})
 
                 for title in valoApiTitles.json()["data"]:
                     if title["uuid"] == players[i]["PlayerIdentity"]["PlayerTitleID"]:
                         final_json[players[i]["Subject"]].update({"Title": title["titleText"]})
-
 
                 for PCard in valoApiPlayerCards.json()["data"]:
                     if PCard["uuid"] == players[i]["PlayerIdentity"]["PlayerCardID"]:
@@ -105,31 +109,31 @@ class Loadouts:
                                 "displayName": sprayValApi["displayName"],
                                 "displayIcon": sprayValApi["displayIcon"],
                                 "fullTransparentIcon": sprayValApi["fullTransparentIcon"]
-                                })
+                            })
 
-                #create weapons field
+                # create weapons field
                 final_json[players[i]["Subject"]].update({"Weapons": {}})
-                
+
                 for skin in PlayerInventory["Items"]:
 
-                    #create skin field
+                    # create skin field
                     final_json[players[i]["Subject"]]["Weapons"].update({skin: {}})
 
                     for socket in PlayerInventory["Items"][skin]["Sockets"]:
-                        #predefined sockets
+                        # predefined sockets
                         for var_socket in sockets:
                             if socket == sockets[var_socket]:
                                 final_json[players[i]["Subject"]]["Weapons"][skin].update(
-                                    {  
+                                    {
                                         var_socket: PlayerInventory["Items"][skin]["Sockets"][socket]["Item"]["ID"]
                                     }
                                 )
 
-                    #create buddy field
+                    # create buddy field
                     # self.log("predefined sockets")
                     # final_json[players[i]["Subject"]]["Weapons"].update({skin: {}})
 
-                    #buddies
+                    # buddies
                     for socket in PlayerInventory["Items"][skin]["Sockets"]:
                         if sockets["skin_buddy"] == socket:
                             for buddy in valoApiBuddies.json()["data"]:
@@ -140,7 +144,7 @@ class Loadouts:
                                         }
                                     )
 
-                    #append names to field
+                    # append names to field
                     for weapon in valoApiWeapons.json()["data"]:
                         if skin == weapon["uuid"]:
                             final_json[players[i]["Subject"]]["Weapons"][skin].update(
@@ -149,27 +153,30 @@ class Loadouts:
                                 }
                             )
                             for skinValApi in weapon["skins"]:
-                                if skinValApi["uuid"] == PlayerInventory["Items"][skin]["Sockets"][sockets["skin"]]["Item"]["ID"]:
+                                if skinValApi["uuid"] == \
+                                        PlayerInventory["Items"][skin]["Sockets"][sockets["skin"]]["Item"]["ID"]:
                                     final_json[players[i]["Subject"]]["Weapons"][skin].update(
                                         {
                                             "skinDisplayName": skinValApi["displayName"]
                                         }
                                     )
                                     for chroma in skinValApi["chromas"]:
-                                        if chroma["uuid"] == PlayerInventory["Items"][skin]["Sockets"][sockets["skin_chroma"]]["Item"]["ID"]:
-                                            if chroma["displayIcon"] != None:
+                                        if chroma["uuid"] == \
+                                                PlayerInventory["Items"][skin]["Sockets"][sockets["skin_chroma"]][
+                                                    "Item"]["ID"]:
+                                            if chroma["displayIcon"] is not None:
                                                 final_json[players[i]["Subject"]]["Weapons"][skin].update(
                                                     {
                                                         "skinDisplayIcon": chroma["displayIcon"]
                                                     }
                                                 )
-                                            elif chroma["fullRender"] != None:
+                                            elif chroma["fullRender"] is not None:
                                                 final_json[players[i]["Subject"]]["Weapons"][skin].update(
                                                     {
                                                         "skinDisplayIcon": chroma["fullRender"]
                                                     }
                                                 )
-                                            elif skinValApi["displayIcon"] != None:
+                                            elif skinValApi["displayIcon"] is not None:
                                                 final_json[players[i]["Subject"]]["Weapons"][skin].update(
                                                     {
                                                         "skinDisplayIcon": skinValApi["displayIcon"]
@@ -181,6 +188,8 @@ class Loadouts:
                                                         "skinDisplayIcon": skinValApi["levels"][0]["displayIcon"]
                                                     }
                                                 )
-                                    if skinValApi["displayName"].startswith("Standard") or skinValApi["displayName"].startswith("Melee"):
-                                        final_json[players[i]["Subject"]]["Weapons"][skin]["skinDisplayIcon"] = weapon["displayIcon"]
+                                    if skinValApi["displayName"].startswith("Standard") or skinValApi[
+                                        "displayName"].startswith("Melee"):
+                                        final_json[players[i]["Subject"]]["Weapons"][skin]["skinDisplayIcon"] = weapon[
+                                            "displayIcon"]
         return final_final_json
